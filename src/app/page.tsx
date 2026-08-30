@@ -4,44 +4,19 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import Image from 'next/image'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { z } from 'zod'
-
+import {
+	type GuiaSadtFieldName,
+	type GuiaSadtForm,
+	guiaSadtFields,
+	guiaSadtSchema,
+} from '@/components/guia-sadt/fields'
+import { GuiaSadtFieldInput } from '@/components/guia-sadt/guia-sadt-field-input'
 import { ModeToggle } from '@/components/mode-toggle'
-import { SadtField, type SadtFieldConfig } from '@/components/sadt-field'
+import { SadtField } from '@/components/sadt-field'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 
 const IMAGE_WIDTH = 1683
 const IMAGE_HEIGHT = 1190
-
-const guiaSadtSchema = z.object({
-	registroANS: z
-		.string()
-		.trim()
-		.refine(
-			(value) => value === '' || /^\d{6}$/.test(value),
-			'O Registro ANS deve conter exatamente 6 dígitos.',
-		),
-})
-
-type GuiaSadtForm = z.infer<typeof guiaSadtSchema>
-
-const sadtFields: SadtFieldConfig[] = [
-	{
-		id: 'registroANS',
-		x: 53,
-		y: 115,
-		width: 120,
-		height: 21,
-		length: 6,
-		gap: 0,
-		fontSize: 14,
-		fontWeight: 500,
-		align: 'center',
-		type: 'number',
-	},
-]
 
 export default function Home() {
 	const [debugEnabled, setDebugEnabled] = useState(false)
@@ -55,22 +30,38 @@ export default function Home() {
 		mode: 'onChange',
 		defaultValues: {
 			registroANS: '',
+			numeroGuiaPrincipal: '',
+			dataAutorizacao: '',
+			senha: '',
+			dataValidadeSenha: '',
+			numeroGuiaOperadora: '',
 		},
 	})
 
-	const registroANS = watch('registroANS')
 	const formValues = watch()
-	const registroANSPreenchido = registroANS.trim() !== ''
-	const registroANSErro = registroANSPreenchido && !!errors.registroANS
-	const registroANSValido = registroANSPreenchido && !errors.registroANS
-	const fieldsWithValues = sadtFields.map((field) => ({
-		...field,
-		value: String(formValues[field.id as keyof GuiaSadtForm] ?? ''),
-	}))
+
+	const handleFieldChange = (name: GuiaSadtFieldName, value: string) => {
+		setValue(name, value, {
+			shouldValidate: true,
+			shouldDirty: true,
+			shouldTouch: true,
+		})
+	}
+
+	const fieldsWithValues = guiaSadtFields.flatMap((field) => {
+		const fieldValue = formValues[field.name] ?? ''
+
+		return field.overlayFields.map((overlayField) => ({
+			...overlayField,
+			value: field.getOverlayValue(overlayField.id, fieldValue),
+		}))
+	})
+
+	const handlePrint = () => window.print()
 
 	return (
-		<main className="flex h-screen flex-col overflow-hidden">
-			<header className="flex h-14 shrink-0 items-center justify-between border-b bg-background px-4">
+		<main className="flex h-screen flex-col overflow-hidden print:block print:h-auto">
+			<header className="flex h-14 shrink-0 items-center justify-between border-b bg-background px-4 print:hidden">
 				<div className="flex items-center gap-2">
 					<h1 className="text-sm font-semibold">Guia SADT</h1>
 				</div>
@@ -88,13 +79,17 @@ export default function Home() {
 					<Button type="button" variant="outline" onClick={() => reset()}>
 						Limpar
 					</Button>
-					<Button type="button">Salvar PDF</Button>
-					<Button type="button">Imprimir</Button>
+					<Button type="button" onClick={handlePrint}>
+						Salvar PDF
+					</Button>
+					<Button type="button" variant="outline" onClick={handlePrint}>
+						Imprimir
+					</Button>
 				</div>
 			</header>
 
-			<section className="flex min-h-0 flex-1">
-				<aside className="w-80 shrink-0 overflow-y-auto border-r bg-background p-4">
+			<section className="flex min-h-0 flex-1 print:block print:min-h-0">
+				<aside className="w-80 shrink-0 overflow-y-auto border-r bg-background p-4 print:hidden">
 					<div className="space-y-4">
 						<div>
 							<h2 className="text-sm font-semibold">Dados da guia</h2>
@@ -108,56 +103,22 @@ export default function Home() {
 							className="space-y-4"
 							onSubmit={(event) => event.preventDefault()}
 						>
-							<div className="space-y-1">
-								<Label htmlFor="registroANS">1. Registro ANS</Label>
-
-								<Input
-									id="registroANS"
-									name="registroANS"
-									inputMode="numeric"
-									maxLength={6}
-									placeholder="000000"
-									value={registroANS}
-									aria-describedby={
-										registroANSErro ? 'registroANS-error' : undefined
-									}
-									aria-invalid={registroANSErro}
-									onChange={(event) => {
-										const value = event.target.value
-											.replace(/\D/g, '')
-											.slice(0, 6)
-
-										setValue('registroANS', value, {
-											shouldValidate: true,
-											shouldDirty: true,
-											shouldTouch: true,
-										})
-									}}
-									className={
-										registroANSErro
-											? 'border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500'
-											: registroANSValido
-												? 'border-green-500 focus-visible:border-green-500 focus-visible:ring-green-500'
-												: ''
-									}
+							{guiaSadtFields.map((field) => (
+								<GuiaSadtFieldInput
+									key={field.name}
+									field={field}
+									value={formValues[field.name] ?? ''}
+									error={errors[field.name]?.message?.toString()}
+									onChange={(value) => handleFieldChange(field.name, value)}
 								/>
-
-								{registroANSErro && (
-									<p
-										id="registroANS-error"
-										className="text-xs font-medium text-red-500"
-									>
-										{errors.registroANS?.message}
-									</p>
-								)}
-							</div>
+							))}
 						</form>
 					</div>
 				</aside>
 
-				<section className="min-w-0 flex-1 overflow-auto bg-zinc-100 p-6">
+				<section className="min-w-0 flex-1 overflow-auto bg-zinc-100 p-6 print:overflow-visible print:bg-white print:p-0">
 					<div
-						className="relative mx-auto w-full max-w-[1683px]"
+						className="relative mx-auto w-full max-w-[1683px] print:max-w-none"
 						style={{
 							aspectRatio: `${IMAGE_WIDTH} / ${IMAGE_HEIGHT}`,
 							containerType: 'size',
