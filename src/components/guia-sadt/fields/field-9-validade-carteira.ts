@@ -2,9 +2,9 @@ import { z } from 'zod'
 
 import type { GuiaSadtFieldDefinition } from './types'
 
-export const dataValidadeSenhaField: GuiaSadtFieldDefinition = {
-	name: 'dataValidadeSenha',
-	label: '6. Data de Validade da Senha',
+export const validadeCarteiraField: GuiaSadtFieldDefinition = {
+	name: 'validadeCarteira',
+	label: '9. Validade da Carteira',
 	placeholder: 'DDMMAAAA',
 	maxLength: 8,
 	schema: z
@@ -12,13 +12,13 @@ export const dataValidadeSenhaField: GuiaSadtFieldDefinition = {
 		.trim()
 		.refine(
 			(value) => value === '' || /^\d{8}$/.test(value),
-			'A Data de Validade da Senha deve conter 8 dígitos no formato DDMMAAAA.',
+			'A Validade da Carteira deve conter 8 dígitos no formato DDMMAAAA.',
 		),
 	overlayFields: [
 		{
-			id: 'dataValidadeSenhaDia',
-			x: 671,
-			y: 158,
+			id: 'validadeCarteiraDia',
+			x: 478,
+			y: 221,
 			width: 40,
 			height: 21,
 			length: 2,
@@ -29,9 +29,9 @@ export const dataValidadeSenhaField: GuiaSadtFieldDefinition = {
 			type: 'number',
 		},
 		{
-			id: 'dataValidadeSenhaMes',
-			x: 718,
-			y: 158,
+			id: 'validadeCarteiraMes',
+			x: 524,
+			y: 221,
 			width: 40,
 			height: 21,
 			length: 2,
@@ -42,9 +42,9 @@ export const dataValidadeSenhaField: GuiaSadtFieldDefinition = {
 			type: 'number',
 		},
 		{
-			id: 'dataValidadeSenhaAno',
-			x: 764,
-			y: 158,
+			id: 'validadeCarteiraAno',
+			x: 570,
+			y: 221,
 			width: 80,
 			height: 21,
 			length: 4,

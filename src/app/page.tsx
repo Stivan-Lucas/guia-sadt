@@ -35,6 +35,11 @@ export default function Home() {
 			senha: '',
 			dataValidadeSenha: '',
 			numeroGuiaOperadora: '',
+			numeroCarteira: '',
+			validadeCarteira: '',
+			nome: '',
+			cartaoSUS: '',
+			atendimentoRN: '',
 		},
 	})
 

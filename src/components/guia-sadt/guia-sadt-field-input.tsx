@@ -25,9 +25,13 @@ export function GuiaSadtFieldInput({
 	const isValid = isFilled && !error
 
 	const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
-		const nextValue = event.target.value
-			.replace(/\D/g, '')
-			.slice(0, field.maxLength)
+		const rawValue = event.target.value
+		const nextValue = field.normalizeValue
+			? field.normalizeValue(rawValue)
+			: field.inputType === 'text'
+				? rawValue.slice(0, field.maxLength)
+				: rawValue.replace(/\D/g, '').slice(0, field.maxLength)
+
 		onChange(nextValue)
 	}
 
@@ -38,7 +42,7 @@ export function GuiaSadtFieldInput({
 			<Input
 				id={field.name}
 				name={field.name}
-				inputMode="numeric"
+				inputMode={field.inputType === 'text' ? 'text' : 'numeric'}
 				maxLength={field.maxLength}
 				placeholder={field.placeholder}
 				value={value}
